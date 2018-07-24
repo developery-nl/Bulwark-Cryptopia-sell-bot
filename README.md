@@ -105,6 +105,10 @@ parameter_delta: 0.0000001
 # So your order will be placed, but never below the rate specified here
 lowest_accepted_sell_rate: 0.0001126
 ```
+## Example running bot
+Below a screenshot of the bot running within a linux console. The interval for checking possible sell orders on Cryptopia was at 15 minutes in this example. Since the balance was enough to place an order this order was published at a rate of 0.0001136.
+
+![screenshot bot in console](https://media.discordapp.net/attachments/384778076179136513/471421238623862814/unknown.png)
 
 ## Note
 
