@@ -298,8 +298,8 @@ if __name__ == '__main__':
     api_secret= settings.get('Cryptopia','api_secret')
     lowest_accepted_sell_rate = settings.getfloat('Cryptopia','lowest_accepted_sell_rate')
 
-    parameter_lowest_bid = settings.getfloat('Cryptopia','parameter_lowest_bid')
-    parameter_highest_ask = settings.getfloat('Cryptopia','parameter_highest_ask')
+    parameter_lowest_ask = settings.getfloat('Cryptopia','parameter_lowest_ask')
+    parameter_highest_bid = settings.getfloat('Cryptopia','parameter_highest_bid')
     parameter_delta = settings.getfloat('Cryptopia','parameter_delta')
 
     #limit = settings.getfloat(coin_arg,'nh_order_limit')
@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
                 # determine current good sell rate
                 
-                sell_rate = parameter_highest_ask * highest_bid_smoothed + parameter_lowest_bid*lowest_ask_smoothed + parameter_delta
+                sell_rate = parameter_highest_bid * highest_bid_smoothed + parameter_lowest_ask*lowest_ask_smoothed + parameter_delta
 
                 if sell_rate<lowest_accepted_sell_rate:
                    sell_rate = lowest_accepted_sell_rate 
