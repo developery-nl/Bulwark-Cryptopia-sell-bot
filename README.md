@@ -95,10 +95,10 @@ walletpassphrase : yourWalletpass
 api_key: 87c2c7b2981840818a263dummy2839
 api_secret: Nb8/rj+Ik1HfMznfLp4L9VqvRwHwUQ/+dummy
 
-# Specify sell rate calculation parameters. (Sell_rate = lowest_bid * parameter_lowest_bid + highest_ask * parameter_highest_ask  + parameter_delta)
+# Specify sell rate calculation parameters. (sell_rate = parameter_highest_bid * highest_bid_smoothed + parameter_lowest_ask*lowest_ask_smoothed + parameter_delt)
 # thus values 0.5 and 0.5 means a sell rate around the center of spread
-parameter_lowest_bid: 0.5
-parameter_highest_ask: 0.5
+parameter_lowest_ask: 0.5
+parameter_highest_bid: 0.5
 parameter_delta: 0.0000001
 
 # Specify the lowest price you are willing to sell your coins
