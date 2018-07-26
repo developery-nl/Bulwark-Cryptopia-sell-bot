@@ -3,11 +3,12 @@ The development repository for the Bulwark to Cryptopia transfer and sell bot
 
 ## Purpose
 
-The Bulwark-Cryptopia-sell-bot lets you automatically transfer coins from your Bulwark wallet to Cryptopia. Coins that you e.g. earned with staking or with masternode rewards can now be send and sold at fixed time intervals. The order amount, time interval, and sell order rate, can be set by the user.
+The Bulwark-Cryptopia-sell-bot lets you automatically transfer coins from your Bulwark wallet to Cryptopia. Coins that you e.g. earned with staking or with masternode rewards can now be send and sold at fixed time intervals. When your Cryptopia balance is sufficient, at regular time intervals a sell order will be place. The transfer amount, order amount, time interval, and sell order rate, can be set by the user.
 
 Advantages:
 * instead of e.g. doing a large weekly manual deposit to Cryptopia and 'dump' your coins at once, the bot takes care of many small sell orders daily or even hourly. Maybe a positive price impact?
 * all is done automatically without the need to logging into Cryptopia, or make transaction in your wallet
+* in case you have multisend enabled in your wallet, you can disable the transfer function for the bot and only use the sell functionality
 * the bot is able to create the sell order rate relative to the 'live' market conditions
 
 The bot is not developed to re-evaluate trading decisions in case a sell order is not filled after a certain time. It is your responsibility to decide what to do with these orders. By changing the sell order parameters in the config file it is possible to sell at market price in case you want all your orders to be filled as quick as possible.
@@ -66,13 +67,21 @@ bwkaddress_from: bQMSWiV9jr2UszXKsenvfPuLFoFDummy
 # Specify your Cryptopia deposit address
 bwkaddress_to: bHMSWiV9jr2UszXKsenvfPuLFoF70Dummy
 
+# In case you want to use the bot to transfer coins from wallet to Cryptopia, set to true
+# when you want to use the bot only to sell orders at regular intervals, set to false
+transfer_mode: true
+
 # Specify the amount (float) to be transferred from your Bulwark wallet address to Cryptopia at <transfer_interval>
 # notice: minimum requirement to place a sell order on Cryptopia is coin value of at least 0.005 btc , thus about 5 bwk
-transfer_amount: 5.1
+transfer_amount: 20.1
+
+# Specify the amount (float) to be used as order size
+# notice: in case your Cryptopia balance is not enough no order will be placed. For anonomity a random correction +/-10% is applied on order size
+order_amount: 5.1
 
 # Specify the interval time in minutes (integer) to check your balance on Cryptopia and initiate a sell order. 
 # A value of 60 means once per hour
-# In case sufficient balance is available on Cryptopia, a sell order will be created with size <transfer_amount>
+# In case sufficient balance is available on Cryptopia, a sell order will be created with size <order_amount>
 order_interval : 60
 
 # Specify the interval time in minutes (integer) to make transfers from wallet to Cryptopia. A value of 1440 means once a day
