@@ -4,6 +4,7 @@ from requests.exceptions import ConnectionError
 from time import sleep
 import configparser  #pip install configparser
 import requests
+import random
 import datetime
 import calendar
 import time
@@ -169,7 +170,7 @@ def get_openorders():
 
 
 
-def submit_trade(rate, bal):
+def submit_trade(rate, ordersize):
         ##Submits a new trade order
         ##URI: https://www.cryptopia.co.nz/api/SubmitTrade
         ## 
@@ -180,14 +181,14 @@ def submit_trade(rate, bal):
         ##Rate: the rate or price to pay for the coins e.g. 0.00000034
         ##Amount: the amount of coins to buy e.g. 123.00000000
         rate_str=str(rate)
-        amount_str=str(bal)
+        amount_str=str(ordersize)
         result, error = api_wrapper.submit_trade('BWK/BTC','Sell',rate_str,amount_str)
         if error is not None:
             #handle error
             print 'ERROR: %s' % error
         else:
             #ok
-            print "         | sell order created ",result
+            print "         | sell order created ",result, " size",ordersize 
 
 
 def cancel_trade():
@@ -286,7 +287,10 @@ if __name__ == '__main__':
     rpcpassword = settings.get(coin_arg,'rpcpassword')
     bwkaddress_from = settings.get(coin_arg,'bwkaddress_from')
     bwkaddress_to = settings.get(coin_arg,'bwkaddress_to')
-    transfer_amount = settings.getfloat(coin_arg,'transfer_amount')
+    transfer_mode = settings.getboolean(coin_arg,'transfer_mode')
+    if transfer_mode:
+        transfer_amount = settings.getfloat(coin_arg,'transfer_amount')
+    order_amount = settings.getfloat(coin_arg,'order_amount')
     order_interval = settings.getint(coin_arg,'order_interval')
     transfer_interval = settings.getint(coin_arg,'transfer_interval')
     wallet_manually_unlocked_mode = settings.getboolean(coin_arg,'wallet_manually_unlocked_mode')
@@ -316,6 +320,7 @@ if __name__ == '__main__':
 
 
     while True:
+        order_amount = order_amount + order_amount * (random.randint(-5,5)/50.0)
         highest_bid_weighted, lowest_ask_weighted = getmarketorders()
         highest_bid_weighted = round(highest_bid_weighted,7)
         lowest_ask_weighted = round(lowest_ask_weighted,7)
@@ -355,14 +360,15 @@ if __name__ == '__main__':
             print datetime.datetime.now().time().replace(microsecond=0), "| check Cryptopia for sufficient balance to place sell order "
             bal = get_balance('BWK')
             # sell orders only possible above approx 5 bwk (0.005 btc)           
-            if bal > 4.9:
-                submit_trade(sell_rate,bal-0.00001)
+            if bal >= order_amount:
+                submit_trade(sell_rate,order_amount)
 
         # every y minutes, transfer coins from wallet to Cryptopia
         if min_counter==transfer_interval:  #TODO 1440
-            print datetime.datetime.now().time().replace(microsecond=0), "| ****  initiate possible coin transfer from wallet to Cryptopia  ****"
             min_counter=0
-            transfer_coins()
+            if transfer_mode:
+                print datetime.datetime.now().time().replace(microsecond=0), "| ****  initiate possible coin transfer from wallet to Cryptopia  ****"
+                transfer_coins()
             
 
 
