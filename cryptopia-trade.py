@@ -290,7 +290,7 @@ if __name__ == '__main__':
     transfer_mode = settings.getboolean(coin_arg,'transfer_mode')
     if transfer_mode:
         transfer_amount = settings.getfloat(coin_arg,'transfer_amount')
-    order_amount = settings.getfloat(coin_arg,'order_amount')
+    order_amount_orig = settings.getfloat(coin_arg,'order_amount')
     order_interval = settings.getint(coin_arg,'order_interval')
     transfer_interval = settings.getint(coin_arg,'transfer_interval')
     wallet_manually_unlocked_mode = settings.getboolean(coin_arg,'wallet_manually_unlocked_mode')
@@ -320,7 +320,7 @@ if __name__ == '__main__':
 
 
     while True:
-        order_amount = order_amount + order_amount * (random.randint(-5,5)/50.0)
+        order_amount = order_amount_orig + order_amount_orig * (random.randint(-5,5)/50.0)
         highest_bid_weighted, lowest_ask_weighted = getmarketorders()
         highest_bid_weighted = round(highest_bid_weighted,7)
         lowest_ask_weighted = round(lowest_ask_weighted,7)
