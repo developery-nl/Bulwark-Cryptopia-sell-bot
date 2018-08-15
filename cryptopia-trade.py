@@ -150,23 +150,32 @@ def get_openorders():
             #ok
             
             if len(result) == 0:
-                print('no open orders')
+                print("         | no open orders")
             else:
                 
                 j_obj = result
 
                 for eenorder in result:
-                       print "  | ", eenorder["OrderId"], eenorder["Type"], eenorder["Rate"], eenorder["Remaining"]
+                       #print "         | ", eenorder["OrderId"], eenorder["Type"], eenorder["Rate"], eenorder["Remaining"], eenorder["TimeStamp"]
+                       ordertimestamp = datetime.datetime.strptime( eenorder["TimeStamp"][:-5], "%Y-%m-%dT%H:%M:%S.%f" )
+                       nowtimestamp = datetime.datetime.utcnow()
+                       #print  nowtimestamp , ordertimestamp
+                       c=nowtimestamp - ordertimestamp
+                       diftimeobj = divmod(c.days * 86400 + c.seconds, 60)  #(minutes, seconds)
 
                        if eenorder["Type"]=="Buy" and not(eenorder["OrderId"] in buy_orders_dict):
-                               print "  | nieuwe order buy entry"
+                               #print "         | new order buy entry"
                                orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
-                               buy_orders_dict[ eenorder["OrderId"] ] = orderobject
+                               #buy_orders_dict[ eenorder["OrderId"] ] = orderobject
 
                        if eenorder["Type"]=="Sell" and not(eenorder["OrderId"] in sell_orders_dict):
-                               print "  | nieuwe order sell entry"
+                               #print "         | new order sell entry"
                                orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
-                               sell_orders_dict[ eenorder["OrderId"] ] = orderobject
+                               #sell_orders_dict[ eenorder["OrderId"] ] = orderobject
+
+                       if eenorder["Type"]=="Sell" and diftimeobj[0]>order_cancel_interval:
+                            print "         | orderId",eenorder["OrderId"]," is",  diftimeobj[0], "minutes old and will be cancelled (setting=",order_cancel_interval,")"
+                            cancel_trade(eenorder["OrderId"])
 
 
 
@@ -191,7 +200,7 @@ def submit_trade(rate, ordersize):
             print "         | sell order created ",result, " size",ordersize 
 
 
-def cancel_trade():
+def cancel_trade(orderid):
         ##Cancels a single order, all orders for a tradepair or all open orders
         ##URI: https://www.cryptopia.co.nz/api/CancelTrade
         ## 
@@ -199,7 +208,9 @@ def cancel_trade():
         ##Type: The type of cancellation, Valid Types: 'All',  'Trade', 'TradePair'
         ##OrderId: The order identifier of trade to cancel (required if type 'Trade')
         ##TradePairId: The Cryptopia tradepair identifier of trades to cancel e.g. '100' (required if type 'TradePair')
-        test=-1
+        result, error = api_wrapper.cancel_trade('Trade', orderid, 'BWK/BTC')
+        print "         | cancel orderid",result
+        
 
 
 
@@ -292,6 +303,8 @@ if __name__ == '__main__':
         transfer_amount = settings.getfloat(coin_arg,'transfer_amount')
     order_amount_orig = settings.getfloat(coin_arg,'order_amount')
     order_interval = settings.getint(coin_arg,'order_interval')
+    order_cancel_interval = settings.getint(coin_arg,'order_cancel_interval')
+
     transfer_interval = settings.getint(coin_arg,'transfer_interval')
     wallet_manually_unlocked_mode = settings.getboolean(coin_arg,'wallet_manually_unlocked_mode')
     if not wallet_manually_unlocked_mode:
@@ -312,7 +325,7 @@ if __name__ == '__main__':
     print "         | settings file processed"
 
     api_wrapper = Api(api_key, api_secret)
-    min_volume_forweightedprice =50  # this approach neglect sell/buy orders with almost no volume. It gets a realistic price for sell/buy order using min value
+    min_volume_forweightedprice =50  # this approach neglect sell/buy orders with almost no volume. It weights average using upto cumulative sell/buy value
 
     # checks if RPC connection works
     get_latest_block()
@@ -351,12 +364,13 @@ if __name__ == '__main__':
                 last_highest_bid = highest_bid_smoothed
                 last_lowest_ask =  lowest_ask_smoothed                     
  
-        # every minute, update minute counter
+        # every minute, update minute counter / check if orders must be cancelled
+        get_openorders()
         min_counter=min_counter+1;
         sleep(55)
 
         # every x minutes, check if we have a balance to be sold
-        if min_counter%order_interval==0: #TODO 60
+        if min_counter%order_interval==0: #e.g. every 60 minutes
             print datetime.datetime.now().time().replace(microsecond=0), "| check Cryptopia for sufficient balance to place sell order "
             bal = get_balance('BWK')
             # sell orders only possible above approx 5 bwk (0.005 btc)           
@@ -364,7 +378,7 @@ if __name__ == '__main__':
                 submit_trade(sell_rate,order_amount)
 
         # every y minutes, transfer coins from wallet to Cryptopia
-        if min_counter==transfer_interval:  #TODO 1440
+        if min_counter==transfer_interval:  #e.g. every 1440 minutes
             min_counter=0
             if transfer_mode:
                 print datetime.datetime.now().time().replace(microsecond=0), "| ****  initiate possible coin transfer from wallet to Cryptopia  ****"
