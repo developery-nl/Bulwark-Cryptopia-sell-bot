@@ -104,17 +104,27 @@ def getmarketorders():
 
 def get_balance(coinname):
         bal=0.0
-        result, error = api_wrapper.get_balance(coinname)
-        if error is not None:
-            #handle error
-            print 'ERROR: %s' % error
-        else:
-            
-            #print result
-            j_obj = result
-            bal = j_obj["Available"]
-            print "         | balance available", bal , "( unconfirmed", j_obj["Unconfirmed"],")"
-            #print 'Request successfull. Balance in BTC = %f' % balance
+        try:
+            result, error = api_wrapper.get_balance(coinname)
+            if error is not None:
+                #handle error
+                print 'ERROR: %s' % error
+            else:
+                
+                #print result
+                j_obj = result
+                bal = j_obj["Available"]
+                print "         | balance available", bal , "( unconfirmed", j_obj["Unconfirmed"],")"
+                #print 'Request successfull. Balance in BTC = %f' % balance
+        except ValueError:
+            print 'No good api'
+            return 0.0
+        except ConnectionError as e:
+            print 'No good  Got an error code:', e
+            return 0.0
+        except URLError, e:
+            print 'No good . Got an error code:', e
+            return 0.0
         return bal
 
 
@@ -142,41 +152,47 @@ def get_openorders():
         ##   }
         ##]
 
-        result, error = api_wrapper.get_openorders('BWK/BTC')
-        if error is not None:
-            #handle error
-            print 'ERROR: %s' % error
-        else:
-            #ok
-            
-            if len(result) == 0:
-                print("         | no open orders")
+        try:
+            result, error = api_wrapper.get_openorders('BWK/BTC')
+            if error is not None:
+                #handle error
+                print 'ERROR: %s' % error
             else:
+                #ok
                 
-                j_obj = result
+                if len(result) == 0:
+                    print("         | no open orders")
+                else:
+                    
+                    j_obj = result
 
-                for eenorder in result:
-                       #print "         | ", eenorder["OrderId"], eenorder["Type"], eenorder["Rate"], eenorder["Remaining"], eenorder["TimeStamp"]
-                       ordertimestamp = datetime.datetime.strptime( eenorder["TimeStamp"][:-5], "%Y-%m-%dT%H:%M:%S.%f" )
-                       nowtimestamp = datetime.datetime.utcnow()
-                       #print  nowtimestamp , ordertimestamp
-                       c=nowtimestamp - ordertimestamp
-                       diftimeobj = divmod(c.days * 86400 + c.seconds, 60)  #(minutes, seconds)
+                    for eenorder in result:
+                           #print "         | ", eenorder["OrderId"], eenorder["Type"], eenorder["Rate"], eenorder["Remaining"], eenorder["TimeStamp"]
+                           ordertimestamp = datetime.datetime.strptime( eenorder["TimeStamp"][:-5], "%Y-%m-%dT%H:%M:%S.%f" )
+                           nowtimestamp = datetime.datetime.utcnow()
+                           #print  nowtimestamp , ordertimestamp
+                           c=nowtimestamp - ordertimestamp
+                           diftimeobj = divmod(c.days * 86400 + c.seconds, 60)  #(minutes, seconds)
 
-                       if eenorder["Type"]=="Buy" and not(eenorder["OrderId"] in buy_orders_dict):
-                               #print "         | new order buy entry"
-                               orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
-                               #buy_orders_dict[ eenorder["OrderId"] ] = orderobject
+                           if eenorder["Type"]=="Buy" and not(eenorder["OrderId"] in buy_orders_dict):
+                                   #print "         | new order buy entry"
+                                   orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
+                                   #buy_orders_dict[ eenorder["OrderId"] ] = orderobject
 
-                       if eenorder["Type"]=="Sell" and not(eenorder["OrderId"] in sell_orders_dict):
-                               #print "         | new order sell entry"
-                               orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
-                               #sell_orders_dict[ eenorder["OrderId"] ] = orderobject
+                           if eenorder["Type"]=="Sell" and not(eenorder["OrderId"] in sell_orders_dict):
+                                   #print "         | new order sell entry"
+                                   orderobject = MyOrderObject(eenorder["OrderId"], eenorder["Rate"], eenorder["Type"], eenorder["Remaining"])
+                                   #sell_orders_dict[ eenorder["OrderId"] ] = orderobject
 
-                       if eenorder["Type"]=="Sell" and diftimeobj[0]>order_cancel_interval:
-                            print "         | orderId",eenorder["OrderId"]," is",  diftimeobj[0], "minutes old and will be cancelled (setting=",order_cancel_interval,")"
-                            cancel_trade(eenorder["OrderId"])
-
+                           if eenorder["Type"]=="Sell" and diftimeobj[0]>order_cancel_interval:
+                                print "         | orderId",eenorder["OrderId"]," is",  diftimeobj[0], "minutes old and will be cancelled (setting=",order_cancel_interval,")"
+                                cancel_trade(eenorder["OrderId"])
+        except ValueError:
+            print 'No good api'
+        except ConnectionError as e:
+            print 'No good  Got an error code:', e
+        except URLError, e:
+            print 'No good . Got an error code:', e
 
 
 def submit_trade(rate, ordersize):
@@ -191,13 +207,22 @@ def submit_trade(rate, ordersize):
         ##Amount: the amount of coins to buy e.g. 123.00000000
         rate_str=str(rate)
         amount_str=str(ordersize)
-        result, error = api_wrapper.submit_trade('BWK/BTC','Sell',rate_str,amount_str)
-        if error is not None:
-            #handle error
-            print 'ERROR: %s' % error
-        else:
-            #ok
-            print "         | sell order created ",result, " size",ordersize 
+        try:
+            sleep(1)
+            result, error = api_wrapper.submit_trade('BWK/BTC','Sell',rate_str,amount_str)
+            if error is not None:
+                #handle error
+                print 'ERROR: %s' % error
+            else:
+                #ok
+                print "         | sell order created ",result, " size",ordersize
+        except ValueError:
+            print 'No good api'
+        except ConnectionError as e:
+            print 'No good  Got an error code:', e
+        except URLError, e:
+            print 'No good . Got an error code:', e
+
 
 
 def cancel_trade(orderid):
@@ -208,8 +233,15 @@ def cancel_trade(orderid):
         ##Type: The type of cancellation, Valid Types: 'All',  'Trade', 'TradePair'
         ##OrderId: The order identifier of trade to cancel (required if type 'Trade')
         ##TradePairId: The Cryptopia tradepair identifier of trades to cancel e.g. '100' (required if type 'TradePair')
-        result, error = api_wrapper.cancel_trade('Trade', orderid, 'BWK/BTC')
-        print "         | cancel orderid",result
+        try:
+            result, error = api_wrapper.cancel_trade('Trade', orderid,99999) # cancels 1 order with specific id
+            print "         | cancel orderid",result
+        except ValueError:
+            print 'No good api'
+        except ConnectionError as e:
+            print 'No good  Got an error code:', e
+        except URLError, e:
+            print 'No good . Got an error code:', e
         
 
 
