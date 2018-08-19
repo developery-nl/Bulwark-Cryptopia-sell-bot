@@ -168,10 +168,11 @@ def get_openorders():
 
                     for eenorder in result:
                            #print "         | ", eenorder["OrderId"], eenorder["Type"], eenorder["Rate"], eenorder["Remaining"], eenorder["TimeStamp"]
-                           ordertimestamp = datetime.datetime.strptime( eenorder["TimeStamp"][:-5], "%Y-%m-%dT%H:%M:%S.%f" )
+                           ordertimestamp = datetime.datetime.strptime( eenorder["TimeStamp"][:-3], "%Y-%m-%dT%H:%M:%S.%f" )
                            nowtimestamp = datetime.datetime.utcnow()
                            #print  nowtimestamp , ordertimestamp
                            c=nowtimestamp - ordertimestamp
+                           #print c
                            diftimeobj = divmod(c.days * 86400 + c.seconds, 60)  #(minutes, seconds)
 
                            if eenorder["Type"]=="Buy" and not(eenorder["OrderId"] in buy_orders_dict):
@@ -188,7 +189,7 @@ def get_openorders():
                                 print "         | orderId",eenorder["OrderId"]," is",  diftimeobj[0], "minutes old and will be cancelled (setting=",order_cancel_interval,")"
                                 cancel_trade(eenorder["OrderId"])
         except ValueError:
-            print 'No good api'
+            print 'No good api [open orders]'
         except ConnectionError as e:
             print 'No good  Got an error code:', e
         except URLError, e:
@@ -234,7 +235,7 @@ def cancel_trade(orderid):
         ##OrderId: The order identifier of trade to cancel (required if type 'Trade')
         ##TradePairId: The Cryptopia tradepair identifier of trades to cancel e.g. '100' (required if type 'TradePair')
         try:
-            result, error = api_wrapper.cancel_trade('Trade', orderid,99999) # cancels 1 order with specific id
+            result, error = api_wrapper.cancel_trade('Trade', orderid,5789) # cancels 1 order with specific id
             print "         | cancel orderid",result
         except ValueError:
             print 'No good api'
