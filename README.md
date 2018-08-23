@@ -3,13 +3,14 @@ The development repository for the Bulwark to Cryptopia transfer and sell bot
 
 ## Purpose
 
-The Bulwark-Cryptopia-sell-bot lets you automatically transfer coins from your Bulwark wallet to Cryptopia. Coins that you e.g. earned with staking or with masternode rewards can now be send and sold at fixed time intervals. When your Cryptopia balance is sufficient, at regular time intervals a sell order will be place. The transfer amount, order amount, time interval, and sell order rate, can be set by the user.
+The Bulwark-Cryptopia-sell-bot lets you automatically transfer coins from your Bulwark wallet to Cryptopia. Coins that you e.g. earned with staking or with masternode rewards can now be send and sold at fixed time intervals. When your Cryptopia balance is sufficient, at regular time intervals a sell order will be place. The transfer amount, order amount, time interval, and sell order rate, can be set by the user. At regular intervals BTC can be withdrawn.
 
 Advantages:
 * instead of e.g. doing a large weekly manual deposit to Cryptopia and 'dump' your coins at once, the bot takes care of many small sell orders daily or even hourly. Maybe a positive price impact?
 * all is done automatically without the need to logging into Cryptopia, or make transaction in your wallet
 * in case you have multisend enabled in your wallet, you can disable the transfer function for the bot and only use the sell functionality
 * the bot is able to create the sell order rate relative to the 'live' market conditions
+* the bot is able to cancel a sell order when it takes too long to fill the order
 
 The bot is not developed to re-evaluate trading decisions in case a sell order is not filled after a certain time. It is your responsibility to decide what to do with these orders. By changing the sell order parameters in the config file it is possible to sell at market price in case you want all your orders to be filled as quick as possible.
 
@@ -91,6 +92,19 @@ order_cancel_interval : 120
 # Specify the interval time in minutes (integer) to make transfers from wallet to Cryptopia. A value of 1440 means once a day
 # A value of <transfer_amount> will be subtracted from your smallest available spendable input and then send.
 transfer_interval : 720
+
+# Specify interval in minutes for withdraw BTC from Cryptopia
+# if you dont want to use it, set it to 99999999
+withdraw_interval : 60
+
+# The desired BTC withdraw amount (random factor +/-25% is applied)
+# Should be larger than 0.001 and a fee is applied by cryptopia
+withdraw_amount : 0.01
+
+# A list of BTC withdraw addresses (comma seperated) on one line.
+# Withdrawals are processed in the order of the list, and looped
+# Note: a single address is also possible, no need to put a comma at the end
+btc_addresses : 1DdummyBTCadressNr1,1DdummyBTCadressNr2,1DdummyBTCadressNr3
 
 # Set [wallet_manually_unlocked_mode : true]
 # in case you take care to unlock the wallet yourself before starting the python bot.
