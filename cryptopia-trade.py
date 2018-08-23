@@ -225,6 +225,24 @@ def submit_trade(rate, ordersize):
             print 'No good . Got an error code:', e
 
 
+def submit_withdraw(address, amount):
+        try:
+            sleep(1)
+            result, error = api_wrapper.submit_withdraw('BTC',address,amount)
+            if error is not None:
+                #handle error
+                print 'ERROR: %s' % error
+            else:
+                #ok
+                print "         | BTC withdraw. Result id #",result, "size",amount,"to",address
+        except ValueError:
+            print 'No good api'
+        except ConnectionError as e:
+            print 'No good  Got an error code:', e
+        except URLError, e:
+            print 'No good . Got an error code:', e
+
+
 
 def cancel_trade(orderid):
         ##Cancels a single order, all orders for a tradepair or all open orders
@@ -312,6 +330,8 @@ if __name__ == '__main__':
     sell_rate= 0.0
     min_counter = 0
   
+    btc_withdraw_counter=0
+
     # argument at startup specifies coin, should be equal to a value in .ini 
     if len(sys.argv) > 1:
         ini_arg= sys.argv[1]
@@ -340,9 +360,17 @@ if __name__ == '__main__':
 
     transfer_interval = settings.getint(coin_arg,'transfer_interval')
     wallet_manually_unlocked_mode = settings.getboolean(coin_arg,'wallet_manually_unlocked_mode')
+
     if not wallet_manually_unlocked_mode:
         walletpassphrase = settings.get(coin_arg,'walletpassphrase')
 
+    withdraw_interval = settings.getint(coin_arg,'withdraw_interval')
+    withdraw_amount = settings.getfloat(coin_arg,'withdraw_amount')
+    btc_addresses = settings.get(coin_arg,'btc_addresses')
+    btclist=btc_addresses.split(",")
+    print " Your BTC addresses: "
+    for temp in btclist:
+       print " ",temp
 
     api_key= settings.get('Cryptopia','api_key')
     api_secret= settings.get('Cryptopia','api_secret')
@@ -363,7 +391,6 @@ if __name__ == '__main__':
     # checks if RPC connection works
     get_latest_block()
     print "         | current Bulwark blockheight",get_latest_block()
-
 
     while True:
         order_amount = order_amount_orig + order_amount_orig * (random.randint(-5,5)/50.0)
@@ -411,11 +438,26 @@ if __name__ == '__main__':
                 submit_trade(sell_rate,order_amount)
 
         # every y minutes, transfer coins from wallet to Cryptopia
-        if min_counter==transfer_interval:  #e.g. every 1440 minutes
-            min_counter=0
+        if min_counter%transfer_interval==0:  #e.g. every 1440 minutes
+            
             if transfer_mode:
                 print datetime.datetime.now().time().replace(microsecond=0), "| ****  initiate possible coin transfer from wallet to Cryptopia  ****"
                 transfer_coins()
+
+        # every z minutes, transfer BTC from Cryptopia to own address in a list
+        if min_counter%withdraw_interval==0:  #set withdraw_interval in config to large 99999999 if you dont want to use this withdraw function
+            w_amount = withdraw_amount + withdraw_amount * (random.randint(-20,20)/50.0)
+            bal_btc = get_balance('BTC')
+            if bal_btc >= w_amount+0.0005 and w_amount >= 0.001:
+                print datetime.datetime.now().time().replace(microsecond=0), "| try withdraw BTC (address list index",btc_withdraw_counter,")"
+                if len(btclist[btc_withdraw_counter])>=26: # valid btc at least 26 char
+                    submit_withdraw(btclist[btc_withdraw_counter], w_amount)
+                    #switch addresses for next withdraw in case multiple are specified in list
+                    btc_withdraw_counter = btc_withdraw_counter +1
+                    if btc_withdraw_counter>=len(btclist):
+                        btc_withdraw_counter=0
+
+
             
 
 
