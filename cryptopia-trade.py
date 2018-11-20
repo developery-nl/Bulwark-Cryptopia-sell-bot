@@ -206,8 +206,12 @@ def submit_trade(rate, ordersize):
         ##Type: the type of trade e.g. 'Buy' or 'Sell'
         ##Rate: the rate or price to pay for the coins e.g. 0.00000034
         ##Amount: the amount of coins to buy e.g. 123.00000000
-        rate_str=str(rate)
-        amount_str=str(ordersize)
+
+        rate_str = '{:.8f}'.format(rate)
+        amount_str= '{:.8f}'.format(ordersize)
+        #rate_str=str(rate)  
+        #amount_str=str(ordersize)
+        
         try:
             sleep(1)
             result, error = api_wrapper.submit_trade('BWK/BTC','Sell',rate_str,amount_str)
